@@ -64,10 +64,6 @@ class Dictionary {
         return current;
     }
 
-    void display() {
-        inorder(root);
-    }
-
     void inorder(Node node) {
         if (node != null) {
             inorder(node.left);
@@ -176,6 +172,24 @@ class Dictionary {
             node.meaning = newValue;
         }
     }
+
+    void displayAllRecursiveTraversals() {
+        System.out.println("\n--- Inorder Traversal ---");
+        inorder(root);
+        System.out.println("\n--- Preorder Traversal ---");
+        preorder(root);
+        System.out.println("\n--- Postorder Traversal ---");
+        postorder(root);
+    }
+    
+    void displayAllIterativeTraversals() {
+        System.out.println("\n--- Iterative Inorder Traversal ---");
+        iterativeInorder();
+        System.out.println("\n--- Iterative Preorder Traversal ---");
+        iterativePreorder();
+        System.out.println("\n--- Iterative Postorder Traversal ---");
+        iterativePostorder();
+    }
 }
 
 public class Main {
@@ -185,10 +199,23 @@ public class Main {
 
         while (true) {
             System.out.println("\n===== BST Dictionary Menu =====");
-            System.out.println("1. Add  2. Delete  3. Display  4. Search  5. Update");
-            System.out.println("6. Recursive Traversals  7. Non-recursive Traversals  8. Exit");
-            int choice = scanner.nextInt();
-            scanner.nextLine();
+            System.out.println("1. Add Word");
+            System.out.println("2. Delete Word");
+            System.out.println("3. Search Word");
+            System.out.println("4. Update Word");
+            System.out.println("5. Display Dictionary (Traversals)");
+            System.out.println("6. Exit");
+            System.out.print("Enter your choice: ");
+            
+            int choice;
+            try {
+                choice = scanner.nextInt();
+                scanner.nextLine(); // Clear the buffer
+            } catch (Exception e) {
+                System.out.println("Invalid input. Please enter a number.");
+                scanner.nextLine(); // Clear the invalid input
+                continue;
+            }
 
             switch (choice) {
                 case 1:
@@ -199,71 +226,43 @@ public class Main {
                     dict.add(key, value);
                     break;
                 case 2:
-                    System.out.print("Enter key to delete: ");
+                    System.out.print("Enter word to delete: ");
                     String delKey = scanner.nextLine();
                     dict.delete(delKey);
                     break;
                 case 3:
-                    dict.display();
-                    break;
-                case 4:
-                    System.out.print("Enter key to search: ");
+                    System.out.print("Enter word to search: ");
                     String searchKey = scanner.nextLine();
                     String result = dict.search(searchKey);
-                    System.out.println(result != null ? result : "Not found");
+                    if (result != null) {
+                        System.out.println("Meaning: " + result);
+                    } else {
+                        System.out.println("Word not found in dictionary");
+                    }
                     break;
-                case 5:
-                    System.out.print("Enter key to update: ");
+                case 4:
+                    System.out.print("Enter word to update: ");
                     String updateKey = scanner.nextLine();
-                    System.out.print("Enter new value: ");
+                    System.out.print("Enter new meaning: ");
                     String newValue = scanner.nextLine();
                     dict.update(updateKey, newValue);
                     break;
+                case 5:
+                    System.out.print("Use recursive traversals? (y/n): ");
+                    String traversalChoice = scanner.nextLine().toLowerCase();
+                    
+                    if (traversalChoice.startsWith("y")) {
+                        dict.displayAllRecursiveTraversals();
+                    } else {
+                        dict.displayAllIterativeTraversals();
+                    }
+                    break;
                 case 6:
-                    System.out.println("\nRecursive Traversal Options:");
-                    System.out.println("1. Inorder  2. Preorder  3. Postorder");
-                    int recChoice = scanner.nextInt();
-                    scanner.nextLine();
-                    System.out.println("\nTraversal Result:");
-                    switch (recChoice) {
-                        case 1:
-                            dict.inorder(dict.root);
-                            break;
-                        case 2:
-                            dict.preorder(dict.root);
-                            break;
-                        case 3:
-                            dict.postorder(dict.root);
-                            break;
-                        default:
-                            System.out.println("Invalid choice");
-                    }
-                    break;
-                case 7:
-                    System.out.println("\nNon-recursive Traversal Options:");
-                    System.out.println("1. Inorder  2. Preorder  3. Postorder");
-                    int nonRecChoice = scanner.nextInt();
-                    scanner.nextLine();
-                    System.out.println("\nTraversal Result:");
-                    switch (nonRecChoice) {
-                        case 1:
-                            dict.iterativeInorder();
-                            break;
-                        case 2:
-                            dict.iterativePreorder();
-                            break;
-                        case 3:
-                            dict.iterativePostorder();
-                            break;
-                        default:
-                            System.out.println("Invalid choice");
-                    }
-                    break;
-                case 8:
+                    System.out.println("Exiting dictionary application. Goodbye!");
                     scanner.close();
                     return;
                 default:
-                    System.out.println("Invalid choice");
+                    System.out.println("Invalid choice. Please try again.");
             }
         }
     }
