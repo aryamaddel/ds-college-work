@@ -1,262 +1,217 @@
 import java.util.Scanner;
 
-class MinHeap {
-    private int[] heap;
-    private int size;
-    private int capacity;
+abstract class Heap {
+    protected final int[] heap;
+    protected int size;
+    protected final int capacity;
 
-    public MinHeap(int capacity) {
+    public Heap(int capacity, int sentinel) {
         this.capacity = capacity;
         this.size = 0;
         this.heap = new int[capacity + 1];
-        heap[0] = Integer.MIN_VALUE;
+        heap[0] = sentinel;
     }
 
-    private int parent(int pos) {
+    // Basic utility methods
+    protected int parent(int pos) {
         return pos / 2;
     }
 
-    private int leftChild(int pos) {
+    protected int leftChild(int pos) {
         return 2 * pos;
     }
 
-    private int rightChild(int pos) {
+    protected int rightChild(int pos) {
         return 2 * pos + 1;
     }
 
-    private boolean isLeaf(int pos) {
+    protected boolean isLeaf(int pos) {
         return pos > (size / 2) && pos <= size;
     }
 
-    private void swap(int fpos, int spos) {
+    protected void swap(int fpos, int spos) {
         int tmp = heap[fpos];
         heap[fpos] = heap[spos];
         heap[spos] = tmp;
     }
 
-    private void minHeapify(int pos) {
-        if (!isLeaf(pos)) {
-            if (heap[pos] > heap[leftChild(pos)] ||
-                    (rightChild(pos) <= size && heap[pos] > heap[rightChild(pos)])) {
-                if (rightChild(pos) > size || heap[leftChild(pos)] < heap[rightChild(pos)]) {
-                    swap(pos, leftChild(pos));
-                    minHeapify(leftChild(pos));
-                } else {
-                    swap(pos, rightChild(pos));
-                    minHeapify(rightChild(pos));
-                }
+    // Abstract methods
+    public abstract void insert(int element);
+
+    protected abstract void heapify(int pos);
+
+    public abstract int extract();
+
+    // Common operations
+    public boolean delete(int element) {
+        for (int i = 1; i <= size; i++) {
+            if (heap[i] == element) {
+                heap[i] = heap[size--];
+                heapify(i);
+                return true;
             }
         }
-    }
-
-    public void insert(int element) {
-        if (size >= capacity)
-            return;
-        heap[++size] = element;
-        int current = size;
-        while (heap[current] < heap[parent(current)]) {
-            swap(current, parent(current));
-            current = parent(current);
-        }
-    }
-
-    public int extractMin() {
-        int popped = heap[1];
-        heap[1] = heap[size--];
-        minHeapify(1);
-        return popped;
+        return false;
     }
 
     public void print() {
-        System.out.println("\nMin Heap Tree Structure:");
+        System.out.println("\n" + (this instanceof MinHeap ? "Min" : "Max") + " Heap Tree Structure:");
         printHeapTree(1, 0);
-        System.out.println("\nArray Representation:");
-        for (int i = 1; i <= size; i++) {
-            System.out.print(heap[i] + " ");
-        }
-        System.out.println();
+        System.out.println("\nArray: " + java.util.Arrays.toString(java.util.Arrays.copyOfRange(heap, 1, size + 1)));
     }
 
-    private void printHeapTree(int index, int level) {
+    protected void printHeapTree(int index, int level) {
         if (index > size)
             return;
-
         printHeapTree(rightChild(index), level + 1);
-
-        for (int i = 0; i < level; i++) {
-            System.out.print("    ");
-        }
-        System.out.println(heap[index]);
-
+        System.out.println("    ".repeat(level) + heap[index]);
         printHeapTree(leftChild(index), level + 1);
     }
 }
 
-class MaxHeap {
-    private int[] heap;
-    private int size;
-    private int capacity;
-
-    public MaxHeap(int capacity) {
-        this.capacity = capacity;
-        this.size = 0;
-        this.heap = new int[capacity + 1];
-        heap[0] = Integer.MAX_VALUE;
+class MinHeap extends Heap {
+    public MinHeap(int capacity) {
+        super(capacity, Integer.MIN_VALUE);
     }
 
-    private int parent(int pos) {
-        return pos / 2;
-    }
+    @Override
+    protected void heapify(int pos) {
+        if (isLeaf(pos))
+            return;
 
-    private int leftChild(int pos) {
-        return 2 * pos;
-    }
+        int smallest = pos;
+        int left = leftChild(pos);
+        int right = rightChild(pos);
 
-    private int rightChild(int pos) {
-        return 2 * pos + 1;
-    }
+        if (left <= size && heap[left] < heap[smallest])
+            smallest = left;
+        if (right <= size && heap[right] < heap[smallest])
+            smallest = right;
 
-    private boolean isLeaf(int pos) {
-        return pos > (size / 2) && pos <= size;
-    }
-
-    private void swap(int fpos, int spos) {
-        int tmp = heap[fpos];
-        heap[fpos] = heap[spos];
-        heap[spos] = tmp;
-    }
-
-    private void maxHeapify(int pos) {
-        if (!isLeaf(pos)) {
-            if (heap[pos] < heap[leftChild(pos)] ||
-                    (rightChild(pos) <= size && heap[pos] < heap[rightChild(pos)])) {
-                if (rightChild(pos) > size || heap[leftChild(pos)] > heap[rightChild(pos)]) {
-                    swap(pos, leftChild(pos));
-                    maxHeapify(leftChild(pos));
-                } else {
-                    swap(pos, rightChild(pos));
-                    maxHeapify(rightChild(pos));
-                }
-            }
+        if (smallest != pos) {
+            swap(pos, smallest);
+            heapify(smallest);
         }
     }
 
+    @Override
     public void insert(int element) {
         if (size >= capacity)
             return;
         heap[++size] = element;
+
         int current = size;
-        while (heap[current] > heap[parent(current)]) {
+        while (current > 1 && heap[current] < heap[parent(current)]) {
             swap(current, parent(current));
             current = parent(current);
         }
     }
 
-    public int extractMax() {
-        int popped = heap[1];
+    @Override
+    public int extract() {
+        if (size < 1)
+            return Integer.MIN_VALUE;
+        int result = heap[1];
         heap[1] = heap[size--];
-        maxHeapify(1);
-        return popped;
+        heapify(1);
+        return result;
+    }
+}
+
+class MaxHeap extends Heap {
+    public MaxHeap(int capacity) {
+        super(capacity, Integer.MAX_VALUE);
     }
 
-    public void print() {
-        System.out.println("\nMax Heap Tree Structure:");
-        printHeapTree(1, 0);
-        System.out.println("\nArray Representation:");
-        for (int i = 1; i <= size; i++) {
-            System.out.print(heap[i] + " ");
-        }
-        System.out.println();
-    }
-
-    private void printHeapTree(int index, int level) {
-        if (index > size)
+    @Override
+    protected void heapify(int pos) {
+        if (isLeaf(pos))
             return;
 
-        printHeapTree(rightChild(index), level + 1);
+        int left = leftChild(pos);
+        int right = rightChild(pos);
+        int largest = pos;
 
-        for (int i = 0; i < level; i++) {
-            System.out.print("    ");
+        // Find the largest among current node and its children
+        if (left <= size && heap[left] > heap[largest])
+            largest = left;
+        if (right <= size && heap[right] > heap[largest])
+            largest = right;
+
+        // If largest is not current node, swap and continue heapifying
+        if (largest != pos) {
+            swap(pos, largest);
+            heapify(largest);
         }
-        System.out.println(heap[index]);
+    }
 
-        printHeapTree(leftChild(index), level + 1);
+    @Override
+    public void insert(int element) {
+        if (size >= capacity)
+            return;
+
+        // Insert at the end and bubble up
+        heap[++size] = element;
+        int current = size;
+
+        // Bubble up while parent is smaller
+        while (current > 1 && heap[current] > heap[parent(current)]) {
+            swap(current, parent(current));
+            current = parent(current);
+        }
+    }
+
+    @Override
+    public int extract() {
+        if (size < 1)
+            return Integer.MAX_VALUE;
+
+        int max = heap[1];
+        heap[1] = heap[size--];
+        heapify(1);
+        return max;
     }
 }
 
 public class HeapOperations {
     public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
-        System.out.println("Choose Heap Type:\n1. Min Heap\n2. Max Heap");
-        int heapType = scanner.nextInt();
-
-        System.out.println("Enter capacity of heap:");
-        int capacity = scanner.nextInt();
-
-        if (heapType == 1) {
-            MinHeap minHeap = new MinHeap(capacity);
-            minHeapOperations(minHeap, scanner);
-        } else if (heapType == 2) {
-            MaxHeap maxHeap = new MaxHeap(capacity);
-            maxHeapOperations(maxHeap, scanner);
-        } else {
-            System.out.println("Invalid choice");
-        }
-        scanner.close();
-    }
-
-    private static void minHeapOperations(MinHeap minHeap, Scanner scanner) {
-        while (true) {
-            System.out.println("\nMin Heap Operations:");
-            System.out.println("1. Insert");
-            System.out.println("2. Extract Min");
-            System.out.println("3. Display");
-            System.out.println("4. Exit");
+        try (Scanner scanner = new Scanner(System.in)) {
+            System.out.println("Choose: 1. Min Heap, 2. Max Heap");
             int choice = scanner.nextInt();
 
-            switch (choice) {
-                case 1:
-                    System.out.println("Enter element to insert:");
-                    minHeap.insert(scanner.nextInt());
-                    break;
-                case 2:
-                    System.out.println("Extracted Min: " + minHeap.extractMin());
-                    break;
-                case 3:
-                    minHeap.print();
-                    break;
-                case 4:
-                    return;
-                default:
-                    System.out.println("Invalid choice");
+            System.out.println("Enter capacity:");
+            int capacity = scanner.nextInt();
+
+            Heap heap = (choice == 1) ? new MinHeap(capacity) : new MaxHeap(capacity);
+            boolean isMinHeap = heap instanceof MinHeap;
+
+            if (choice != 1 && choice != 2) {
+                System.out.println("Invalid choice");
+                return;
             }
-        }
-    }
 
-    private static void maxHeapOperations(MaxHeap maxHeap, Scanner scanner) {
-        while (true) {
-            System.out.println("\nMax Heap Operations:");
-            System.out.println("1. Insert");
-            System.out.println("2. Extract Max");
-            System.out.println("3. Display");
-            System.out.println("4. Exit");
-            int choice = scanner.nextInt();
+            while (true) {
+                String type = isMinHeap ? "Min" : "Max";
+                System.out.println(
+                        "\n" + type + " Heap: 1. Insert, 2. Extract " + type + ", 3. Delete, 4. Display, 5. Exit");
+                choice = scanner.nextInt();
 
-            switch (choice) {
-                case 1:
-                    System.out.println("Enter element to insert:");
-                    maxHeap.insert(scanner.nextInt());
-                    break;
-                case 2:
-                    System.out.println("Extracted Max: " + maxHeap.extractMax());
-                    break;
-                case 3:
-                    maxHeap.print();
-                    break;
-                case 4:
-                    return;
-                default:
-                    System.out.println("Invalid choice");
+                switch (choice) {
+                    case 1 -> {
+                        System.out.print("Insert: ");
+                        heap.insert(scanner.nextInt());
+                    }
+                    case 2 -> System.out.println("Extracted " + (isMinHeap ? "Min" : "Max") + ": " + heap.extract());
+                    case 3 -> {
+                        System.out.print("Delete: ");
+                        System.out.println(heap.delete(scanner.nextInt()) ? "Success" : "Not found");
+                    }
+                    case 4 -> heap.print();
+                    case 5 -> {
+                        return;
+                    }
+                    default -> System.out.println("Invalid choice");
+                }
             }
         }
     }
